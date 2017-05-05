@@ -150,6 +150,9 @@ class Repository(GithubEntity):
         return pull.sync()
 
     def ref(self, ref):
+        """
+        :rtype: :class:`Reference`
+        """
         return self.make(Reference, self, ref)
 
     def merge(self, base, head, message):
