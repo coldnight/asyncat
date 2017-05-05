@@ -7,6 +7,6 @@ from setuptools import setup
 
 setup(
     setup_requires=["pbr>=1.9", "setuptools>=17.1", "pytest-runner"],
-    test_require=["python-dotenv", 'pytest'],
+    tests_require=["python-dotenv", 'pytest'],
     pbr=True
 )
