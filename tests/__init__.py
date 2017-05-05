@@ -16,6 +16,8 @@ dot_envpath = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
 if os.path.exists(dot_envpath):
     dotenv.load_dotenv(dot_envpath)
 
+os.environ["ASYNC_TEST_TIMEOUT"] = "20"
+
 
 class AsyncatTestCase(testing.AsyncTestCase):
     def setUp(self):

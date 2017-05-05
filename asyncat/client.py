@@ -10,9 +10,9 @@ from tornado import gen
 from tornado import httpclient
 
 try:
-    from urllib import urlencode
+    from urllib import urlencode            # pragma: no cover
 except ImportError:
-    from urllib.parse import urlencode
+    from urllib.parse import urlencode      # pragma: no cover
 
 
 class GithubError(Exception):
@@ -79,7 +79,8 @@ class AsyncGithubClient(object):
         if kwargs.get("method", "GET") == "GET":
             url = self.get_url(path, params, host=host)
         else:
-            kwargs["body"] = urlencode(params)
+            if params is not None:
+                kwargs["body"] = json.dumps(params)
             url = self.get_url(path, host=host)
 
         try:
@@ -87,8 +88,9 @@ class AsyncGithubClient(object):
         except httpclient.HTTPError as e:
             raise GithubError(e.response)
 
-        data = json.loads(resp.body)
+        if resp.body:
+            data = json.loads(resp.body)
 
-        # Bind data to the response
-        resp.data = data
+            # Bind data to the response
+            resp.data = data
         raise gen.Return(resp)

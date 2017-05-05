@@ -25,7 +25,7 @@ class GithubEntity(object):
 
     def initialize(self):
         """Override this method to initialize in subclass."""
-        pass
+        pass        # pragma: no cover
 
     @gen.coroutine
     def sync(self):
@@ -42,7 +42,7 @@ class GithubEntity(object):
         This method must returns an instance of
         :class:`tornado.concurrent.Future`
         """
-        raise NotImplementedError()
+        raise NotImplementedError()     # pragma: no cover
 
     def make(self, entity_cls, *args, **kwargs):
         return entity_cls(self.client, *args, **kwargs)
@@ -81,6 +81,52 @@ class PullRequest(GithubEntity, _CommentMixin):
             '{}/pulls/{}'.format(self.repo.base_path, self.num))
 
 
+class Reference(GithubEntity):
+    def initialize(self, repo, ref):
+        """Initialize
+
+        :type repo: :class:`Repository`
+        :param ref:
+            Reference in url.
+            See also:
+                https://developer.github.com/v3/git/refs/#update-a-reference
+        """
+        self.repo = repo
+        self.ref = ref[5:] if ref.startswith("refs/") else ref
+
+    def do_sync(self):
+        return self.client.request(
+            "{}/git/refs/{}".format(self.repo.base_path, self.ref))
+
+    def create(self, sha):
+        """Create a reference
+
+        See also: https://developer.github.com/v3/git/refs/#create-a-reference
+        """
+        return self.client.request(
+            self.repo.base_path + "/git/refs",
+            params={
+                "ref": "refs/" + self.ref,
+                "sha": sha
+            }, method="POST")
+
+    def update(self, sha, force=False):
+        """Update a reference
+
+        See also: https://developer.github.com/v3/git/refs/#update-a-reference
+        """
+        return self.client.request(
+            self.repo.base_path + "/git/refs/" + self.ref,
+            params={
+                "sha": sha,
+                "force": force,
+            }, method="PATCH")
+
+    def delete(self):
+        return self.client.request(
+            self.repo.base_path + "/git/refs/" + self.ref, method="DELETE")
+
+
 class Repository(GithubEntity):
     """Representes a repository of Github."""
     def initialize(self, owner, label):
@@ -100,8 +146,11 @@ class Repository(GithubEntity):
         :rtype: :class:`PullRequest`
         """
 
-        pull = self.make(PullRequest, self, self.num)
+        pull = self.make(PullRequest, self, num)
         return pull.sync()
+
+    def ref(self, ref):
+        return self.make(Reference, self, ref)
 
     def merge(self, base, head, message):
         """Perform a merge.
@@ -110,36 +159,12 @@ class Repository(GithubEntity):
             https://developer.github.com/v3/repos/merging/#perform-a-merge
         """
         return self.client.request(
-            "{}/merges".format(self.base_path, self.num),
+            "{}/merges".format(self.base_path),
             params={
                 "base": base,
                 "head": head,
                 "commit_message": message
             }, method="POST")
-
-    def create_ref(self, ref, sha):
-        """Create a reference
-
-        See also: https://developer.github.com/v3/git/refs/#create-a-reference
-        """
-        return self.client.request(
-            self.base_path + "/git/refs",
-            params={
-                "ref": ref,
-                "sha": sha
-            }, method="POST")
-
-    def update_ref(self, ref, sha, force=False):
-        """Update a reference
-
-        See also: https://developer.github.com/v3/git/refs/#update-a-reference
-        """
-        return self.client.request(
-            self.base_path + "/git/refs/" + ref,
-            params={
-                "sha": sha,
-                "force": force,
-            }, method="PATCh")
 
     def create_status(self, sha, state, **kwargs):
         """Create a status
