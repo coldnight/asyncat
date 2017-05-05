@@ -19,7 +19,7 @@ class OAuth(object):
 
         :pram redirect_uri:  Github redirects back URL
         :param scopes: scopes
-        :type scopes: list of :class:`~asyncat.enum.Scope`
+        :type scopes: list of :class:`~asyncat.enumeration.Scope`
         :param state: an unguessable random string.
         """
         return self._client.get_url("/login/oauth/authorize", [

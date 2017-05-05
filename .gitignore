@@ -67,3 +67,6 @@ local_settings.py
 # config file
 config.toml
 main.db
+
+.eggs/
+.env

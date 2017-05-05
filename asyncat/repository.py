@@ -5,7 +5,7 @@ from __future__ import print_function, division, unicode_literals
 
 from tornado import gen
 
-from .enum import StatusState
+from .enumeration import StatusState
 
 
 class GithubEntity(object):
@@ -33,7 +33,8 @@ class GithubEntity(object):
 
         :returns: self
         """
-        yield self.do_sync()
+        resp = yield self.do_sync()
+        self.c = resp.data
         raise gen.Return(self)
 
     def do_sync(self):
@@ -75,9 +76,8 @@ class PullRequest(GithubEntity, _CommentMixin):
         self.repo = repo
         self.num = num
 
-    @gen.coroutine
     def do_sync(self):
-        self.c = yield self.client.request(
+        return self.client.request(
             '{}/pulls/{}'.format(self.repo.base_path, self.num))
 
 
@@ -86,6 +86,9 @@ class Repository(GithubEntity):
     def initialize(self, owner, label):
         self.owner = owner
         self.label = label
+
+    def do_sync(self):
+        return self.client.request(self.base_path)
 
     @property
     def base_path(self):
