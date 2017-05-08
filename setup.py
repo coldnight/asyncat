@@ -13,6 +13,8 @@ os.environ["SKIP_WRITE_GIT_CHANGELOG"] = "1"
 
 setup(
     setup_requires=["pbr>=1.9", "setuptools>=17.1", "pytest-runner"],
-    tests_require=["python-dotenv", 'pytest', 'coverage', 'pytest-cov'],
+    # Put pytest last in tests_require because a bug in setuptools.
+    # See also: https://github.com/pytest-dev/pytest-runner/issues/11
+    tests_require=["python-dotenv", 'coverage', 'pytest-cov', 'pytest'],
     pbr=True
 )
