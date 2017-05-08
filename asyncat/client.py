@@ -7,6 +7,7 @@ from __future__ import print_function, division, unicode_literals
 import json
 
 from tornado import gen
+from tornado import escape
 from tornado import httpclient
 
 try:
@@ -93,7 +94,7 @@ class AsyncGithubClient(object):
             raise GithubError(e.response)
 
         if resp.body:
-            data = json.loads(resp.body)
+            data = json.loads(escape.to_unicode(resp.body))
 
             # Bind data to the response
             resp.data = data
