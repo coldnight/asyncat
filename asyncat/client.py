@@ -16,7 +16,9 @@ except ImportError:
 
 
 class GithubError(Exception):
+    """Exception of GithubAsyncClient"""
     def __init__(self, response=None):
+        """Initialize"""
         if response:
             msg = self._parse_response(response)
             self.status_code = response.code
@@ -26,7 +28,8 @@ class GithubError(Exception):
 
         super(GithubError, self).__init__(msg)
 
-    def _parse_response(self, resp):
+    @staticmethod
+    def _parse_response(resp):
         """ Parse message from response """
         msg = "\n".join([
             "Status: {}".format(resp.code),
@@ -56,6 +59,7 @@ class AsyncGithubClient(object):
         return "{}{}".format(host, path)
 
     def set_access_token(self, access_token):
+        """Set access token."""
         self.__access_token = access_token
 
     @gen.coroutine

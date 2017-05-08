@@ -20,6 +20,7 @@ os.environ["ASYNC_TEST_TIMEOUT"] = "20"
 
 
 class AsyncatTestCase(testing.AsyncTestCase):
+    """Base class of test cases."""
     def setUp(self):
         super(AsyncatTestCase, self).setUp()
         token = os.environ.get("ASYNCAT_TOKEN")

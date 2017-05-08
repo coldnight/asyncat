@@ -9,8 +9,10 @@ from . import AsyncatTestCase
 
 
 class AsyncGithubClientTestCase(AsyncatTestCase):
+    """AsyncGithubClient test case."""
     @testing.gen_test
     def test_request(self):
+        """Request Github ok."""
         resp = yield self.client.request("/user")
         self.assertEqual(resp.code, 200)
         self.assertEqual(resp.data["login"], "asyncat")

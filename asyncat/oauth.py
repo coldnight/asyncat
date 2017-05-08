@@ -4,7 +4,8 @@
 from __future__ import print_function, division, unicode_literals
 
 
-class OAuth(object):
+class OAuth(object):        # pylint: disable=R0903
+    """Github OAuth helper to get OAuth url."""
     def __init__(self, client, client_id, client_secret):
         """Initialize
 
@@ -15,7 +16,7 @@ class OAuth(object):
         self.__client_secret = client_secret
 
     def get_url(self, redirect_uri, scopes, state):
-        """ Get oauth url to redirect users to request Github access
+        """ Get OAuth url to redirect users to request Github access
 
         :pram redirect_uri:  Github redirects back URL
         :param scopes: scopes

@@ -12,17 +12,21 @@ from . import AsyncatTestCase
 
 
 class RepositoryTestCase(AsyncatTestCase):
+    """Repository test case."""
     def setUp(self):
+        """Setup"""
         super(RepositoryTestCase, self).setUp()
         self.repo = repository.Repository(self.client, "asyncat", "demo")
 
     @testing.gen_test
     def test_sync(self):
+        """Synchronizes repository."""
         yield self.repo.sync()
         self.assertEqual(self.repo.c["id"], 90337889)
 
     @testing.gen_test
     def test_pull_not_exists(self):
+        """Pull request not exists."""
         try:
             yield self.repo.pull(404)
         except GithubError as e:
@@ -30,11 +34,13 @@ class RepositoryTestCase(AsyncatTestCase):
 
     @testing.gen_test
     def test_pull(self):
+        """Pull Request is ok."""
         pull = yield self.repo.pull(1)
         self.assertEqual(pull.c["title"], "Create demo.txt")
 
     @testing.gen_test
     def test_comment(self):
+        """Comment on Pull Request."""
         pull = yield self.repo.pull(1)
         self.assertEqual(pull.c["title"], "Create demo.txt")
         yield pull.create_comment("Test Comment")
@@ -61,12 +67,14 @@ class RepositoryTestCase(AsyncatTestCase):
 
     @testing.gen_test
     def test_status(self):
+        """Create status."""
         sha = "805356407393aacf4d810d07aad260c01cc8e8ad"
         resp = yield self.repo.create_status(sha, "pending")
         self.assertEqual(resp.code, 201)
 
     @testing.gen_test
     def test_list_statuses(self):
+        """List statues."""
         sha = "805356407393aacf4d810d07aad260c01cc8e8ad"
         resp = yield self.repo.get_statuses(sha)
         self.assertEqual(resp.code, 200)

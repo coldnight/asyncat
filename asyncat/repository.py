@@ -9,6 +9,7 @@ from .enumeration import StatusState
 
 
 class GithubEntity(object):
+    """A object represents the entity of Github."""
     def __init__(self, client, *args, **kwargs):
         """Initialize
 
@@ -45,10 +46,12 @@ class GithubEntity(object):
         raise NotImplementedError()     # pragma: no cover
 
     def make(self, entity_cls, *args, **kwargs):
+        """Make an entity."""
         return entity_cls(self.client, *args, **kwargs)
 
 
-class _CommentMixin(object):
+class _CommentMixin(object):        # pylint: disable=R0903
+    """Comment mixin to add `create_comment` method to an entity."""
     def create_comment(self, body):
         """Create comment on issues or pull requests.
 
@@ -77,11 +80,13 @@ class PullRequest(GithubEntity, _CommentMixin):
         self.num = num
 
     def do_sync(self):
+        """Synchronize."""
         return self.client.request(
             '{}/pulls/{}'.format(self.repo.base_path, self.num))
 
 
 class Reference(GithubEntity):
+    """Reference."""
     def initialize(self, repo, ref):
         """Initialize
 
@@ -95,6 +100,7 @@ class Reference(GithubEntity):
         self.ref = ref[5:] if ref.startswith("refs/") else ref
 
     def do_sync(self):
+        """Synchronizing."""
         return self.client.request(
             "{}/git/refs/{}".format(self.repo.base_path, self.ref))
 
@@ -123,6 +129,7 @@ class Reference(GithubEntity):
             }, method="PATCH")
 
     def delete(self):
+        """Delete current reference."""
         return self.client.request(
             self.repo.base_path + "/git/refs/" + self.ref, method="DELETE")
 
@@ -134,10 +141,12 @@ class Repository(GithubEntity):
         self.label = label
 
     def do_sync(self):
+        """Synchronizing."""
         return self.client.request(self.base_path)
 
     @property
     def base_path(self):
+        """Path of this repository."""
         return "/repos/{}/{}".format(self.owner, self.label)
 
     def pull(self, num):
