@@ -87,3 +87,33 @@ class RepositoryTestCase(AsyncatTestCase):
         pull.state = "closed"
         pull.title = "[Closed] " + pull.title
         yield pull.update()
+
+    @testing.gen_test
+    def test_issue(self):
+        """Get an issue."""
+        issue = yield self.repo.issue(12)
+        self.assertEqual(issue.title, "Test issue")
+
+    @testing.gen_test
+    def test_issue_milestone(self):
+        """Get an issue."""
+        issue = yield self.repo.issue(12)
+        issue.milestone = 2
+        yield issue.update()
+        self.assertEqual(issue.milestone, 2)
+
+        issue = yield self.repo.create_issue("Test issue", "issue body",
+                                             milestone=1)
+        self.assertEqual(issue.milestone, 1)
+
+        issue.state = "closed"
+        yield issue.update()
+
+    @testing.gen_test
+    def test_issue_create_and_update(self):
+        """Create and update an issue."""
+        issue = yield self.repo.create_issue("Test issue", "issue body")
+
+        issue.state = "closed"
+        issue.title = "[Closed] " + issue.title
+        yield issue.update()

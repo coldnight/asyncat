@@ -70,7 +70,7 @@ class _CommentMixin(object):        # pylint: disable=R0903
         )
 
 
-class PullRequest(GithubEntity, _CommentMixin):
+class PullRequest(GithubEntity, _CommentMixin):     # pylint: disable=R0902
     """Representes a pull reuqest of Github.
 
     See also: https://developer.github.com/v3/pulls/#get-a-single-pull-request
@@ -91,22 +91,24 @@ class PullRequest(GithubEntity, _CommentMixin):
         self.maintainer_can_modify = None
 
     def after_sync(self):
+        """Set property after synchronize."""
         self.title = self.c["title"]
         self.body = self.c["body"]
         self.state = self.c["state"]
         self.base = self.c["base"]["ref"]
+        self.head = self.c["head"]["ref"]
         self.maintainer_can_modify = self.c["maintainer_can_modify"]
 
     @gen.coroutine
-    def create(self, title, head, base, body, maintainer_can_modify=True):
+    def create(self):
         """Create a pull request."""
         resp = yield self.client.request(
             self.repo.base_path + "/pulls", params={
-                "title": title,
-                "head": head,
-                "base": base,
-                "body": body,
-                "maintainer_can_modify": maintainer_can_modify
+                "title": self.title,
+                "head": self.head,
+                "base": self.base,
+                "body": self.body,
+                "maintainer_can_modify": self.maintainer_can_modify
             },
             method="POST")
         self.c = resp.data
@@ -136,6 +138,87 @@ class PullRequest(GithubEntity, _CommentMixin):
         """Synchronize."""
         return self.client.request(
             '{}/pulls/{}'.format(self.repo.base_path, self.num))
+
+
+class Issue(GithubEntity, _CommentMixin):       # pylint: disable=R0902
+    """Representes an issue of Github."""
+    def initialize(self, repo, num):
+        """Initialize
+
+        :type repo: :class:`Repository`
+        :param num: Issue number.
+        """
+        self.repo = repo
+        self.num = num
+        self.title = None
+        self.body = None
+        self.state = "open"
+        self.milestone = None
+        self.labels = []
+        self.assignees = []
+
+    def after_sync(self):
+        """Set property after synchronize."""
+        self.num = self.c["number"]
+        self.title = self.c["title"]
+        self.body = self.c["body"]
+        self.state = self.c["state"]
+
+        if self.c["milestone"]:
+            self.milestone = self.c["milestone"]["number"]
+        else:
+            self.milestone = None
+
+        self.assignees = [x["login"] for x in self.c["assignees"]]
+        self.labels = self.c["labels"]
+
+    @gen.coroutine
+    def create(self):
+        """Create an issue."""
+
+        params = {
+            "title": self.title,
+            "body": self.body,
+            "labels": self.labels or [],
+            "assignees": self.assignees or [],
+        }
+
+        if self.milestone:
+            params["milestone"] = self.milestone
+
+        resp = yield self.client.request(
+            self.repo.base_path + "/issues",
+            params=params, method="POST")
+        self.c = resp.data
+        self.after_sync()
+        raise gen.Return(self)
+
+    @gen.coroutine
+    def update(self):
+        """Use property update current issue."""
+
+        params = {
+            "title": self.title,
+            "body": self.body,
+            "state": self.state,
+            "labels": self.labels,
+            "assignees": self.assignees,
+        }
+
+        if self.milestone:
+            params["milestone"] = self.milestone
+
+        resp = yield self.client.request(
+            "{}/issues/{}".format(self.repo.base_path, self.num),
+            params=params, method="PATCH")
+        self.c = resp.data
+        self.after_sync()
+        raise gen.Return(self)
+
+    def do_sync(self):
+        """Synchronize."""
+        return self.client.request("{}/issues/{}".format(self.repo.base_path,
+                                                         self.num))
 
 
 class Reference(GithubEntity):
@@ -211,6 +294,12 @@ class Repository(GithubEntity):
         pull = self.make(PullRequest, self, num)
         return pull.sync()
 
+    def issue(self, num):
+        """
+        :rtype: :class:`Issue`
+        """
+        return self.make(Issue, self, num).sync()
+
     def ref(self, ref):
         """
         :rtype: :class:`Reference`
@@ -231,11 +320,27 @@ class Repository(GithubEntity):
                 "commit_message": message
             }, method="POST")
 
-    def create_pull(self, title, head, base, body,
+    def create_pull(self, title, head, base, body,      # pylint: disable=R0913
                     maintainer_can_modify=False):
         """Create a pull reuqest."""
-        return self.make(PullRequest, self, 0).create(title, head, base, body,
-                                                      maintainer_can_modify)
+        pull = self.make(PullRequest, self, 0)
+        pull.title = title
+        pull.head = head
+        pull.base = base
+        pull.body = body
+        pull.maintainer_can_modify = maintainer_can_modify
+        return pull.create()
+
+    def create_issue(self, title, body,     # pylint: disable=R0913
+                     milestone=None, labels=None, assignees=None):
+        """Create an issue."""
+        issue = self.make(Issue, self, 0)
+        issue.title = title
+        issue.body = body
+        issue.milestone = milestone
+        issue.labels = labels
+        issue.assignees = assignees
+        return issue.create()
 
     def create_status(self, sha, state, **kwargs):
         """Create a status
