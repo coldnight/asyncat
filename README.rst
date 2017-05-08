@@ -1,4 +1,4 @@
 asyncat
 =======
 
-An asynchronous Github API Client based on Tornado.
+An asynchronous Github API library based on Tornado.
