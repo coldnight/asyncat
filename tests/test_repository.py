@@ -78,3 +78,12 @@ class RepositoryTestCase(AsyncatTestCase):
         sha = "805356407393aacf4d810d07aad260c01cc8e8ad"
         resp = yield self.repo.get_statuses(sha)
         self.assertEqual(resp.code, 200)
+
+    @testing.gen_test
+    def test_pull_create_and_update(self):
+        """Create and update pull request."""
+        pull = yield self.repo.create_pull("Test Pull", "feature-pull",
+                                           "master", "test body")
+        pull.state = "closed"
+        pull.title = "[Closed] " + pull.title
+        yield pull.update()

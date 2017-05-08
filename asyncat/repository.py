@@ -36,7 +36,12 @@ class GithubEntity(object):
         """
         resp = yield self.do_sync()
         self.c = resp.data
+        self.after_sync()
         raise gen.Return(self)
+
+    def after_sync(self):
+        """This function will call after ``do_sync``."""
+        pass
 
     def do_sync(self):
         """Override this method to implemente synchronizes with Github.
@@ -78,6 +83,54 @@ class PullRequest(GithubEntity, _CommentMixin):
         """
         self.repo = repo
         self.num = num
+
+        self.title = None
+        self.body = None
+        self.state = None
+        self.base = None
+        self.maintainer_can_modify = None
+
+    def after_sync(self):
+        self.title = self.c["title"]
+        self.body = self.c["body"]
+        self.state = self.c["state"]
+        self.base = self.c["base"]["ref"]
+        self.maintainer_can_modify = self.c["maintainer_can_modify"]
+
+    @gen.coroutine
+    def create(self, title, head, base, body, maintainer_can_modify=True):
+        """Create a pull request."""
+        resp = yield self.client.request(
+            self.repo.base_path + "/pulls", params={
+                "title": title,
+                "head": head,
+                "base": base,
+                "body": body,
+                "maintainer_can_modify": maintainer_can_modify
+            },
+            method="POST")
+        self.c = resp.data
+        self.after_sync()
+        self.num = self.c["number"]
+        raise gen.Return(self)
+
+    @gen.coroutine
+    def update(self):
+        """Update current pull request. Before call this function you must
+        set current instance's property to update.
+        """
+        resp = yield self.client.request(
+            "{}/pulls/{}".format(self.repo.base_path, self.num),
+            params={
+                "title": self.title,
+                "body": self.body,
+                "state": self.state,
+                "base": self.base,
+                "maintainer_can_modify": self.maintainer_can_modify,
+            }, method="PATCH")
+        self.c = resp.data
+        self.after_sync()
+        raise gen.Return(self)
 
     def do_sync(self):
         """Synchronize."""
@@ -177,6 +230,12 @@ class Repository(GithubEntity):
                 "head": head,
                 "commit_message": message
             }, method="POST")
+
+    def create_pull(self, title, head, base, body,
+                    maintainer_can_modify=False):
+        """Create a pull reuqest."""
+        return self.make(PullRequest, self, 0).create(title, head, base, body,
+                                                      maintainer_can_modify)
 
     def create_status(self, sha, state, **kwargs):
         """Create a status
