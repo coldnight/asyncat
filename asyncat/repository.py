@@ -389,3 +389,33 @@ class Repository(GithubEntity):
         """
         return self.client.request(
             self.base_path + "/commits/" + sha + "/statuses")
+
+    def search_issues(self, q=None, sort=None, order=None):
+        """Search issues in current repository."""
+        params = {}
+
+        repo_q = "repo:{}/{}".format(self.owner, self.label)
+
+        if q is not None:
+            params["q"] = "{} {}".format(q, repo_q)
+        else:
+            params["q"] = repo_q
+
+        if sort is not None:
+            params["sort"] = sort
+
+        if order is not None:
+            params["order"] = order
+
+        return self.client.request("/search/issues", params or None)
+
+    def search_pulls(self, q=None, sort=None, order=None):
+        """Search pull requests in current repository."""
+        base_q = "type:pr"
+
+        if q is None:
+            q = base_q
+        else:
+            q = "{} {}".format(q, base_q)
+
+        return self.search_issues(q, sort, order)
