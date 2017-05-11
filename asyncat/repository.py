@@ -221,6 +221,23 @@ class Issue(GithubEntity, _CommentMixin):       # pylint: disable=R0902
                                                          self.num))
 
 
+class Commit(GithubEntity):
+    """Representes a commit in repository."""
+    def initialize(self, repo, sha):
+        """Initialize
+
+        :type repo: :class:`Repository`
+        :param sha: commit's sha
+        """
+        self.repo = repo
+        self.sha = sha
+
+    def do_sync(self):
+        """Synchronize."""
+        return self.client.request("{}/commits/{}".format(self.repo.base_path,
+                                                          self.sha))
+
+
 class Reference(GithubEntity):
     """Reference."""
     def initialize(self, repo, ref):
@@ -299,6 +316,12 @@ class Repository(GithubEntity):
         :rtype: :class:`Issue`
         """
         return self.make(Issue, self, num).sync()
+
+    def commit(self, sha):
+        """
+        :rtype: :class:`Commit`
+        """
+        return self.make(Commit, self, sha).sync()
 
     def ref(self, ref):
         """

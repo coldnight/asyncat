@@ -117,3 +117,9 @@ class RepositoryTestCase(AsyncatTestCase):
         issue.state = "closed"
         issue.title = "[Closed] " + issue.title
         yield issue.update()
+
+    @testing.gen_test
+    def test_commit(self):
+        sha = "0ed08c759740b0174893309fd43e7927b4f94077"
+        commit = yield self.repo.commit(sha)
+        self.assertEqual(commit.c["sha"], sha)
