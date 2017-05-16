@@ -120,12 +120,14 @@ class RepositoryTestCase(AsyncatTestCase):
 
     @testing.gen_test
     def test_commit(self):
+        """Commit in repo."""
         sha = "0ed08c759740b0174893309fd43e7927b4f94077"
         commit = yield self.repo.commit(sha)
         self.assertEqual(commit.c["sha"], sha)
 
     @testing.gen_test
     def test_search_issues(self):
+        """Search issues in repo."""
         resp = yield self.repo.search_issues("milestone:2")
         self.assertEqual(resp.code, 200)
 
@@ -137,6 +139,7 @@ class RepositoryTestCase(AsyncatTestCase):
 
     @testing.gen_test
     def test_search_pulls(self):
+        """Search pull request in repo."""
         sha = "235f37b19e0cf864e2801714d0392bfe42025b72"
         resp = yield self.repo.search_pulls(sha)
         self.assertEqual(resp.code, 200)
